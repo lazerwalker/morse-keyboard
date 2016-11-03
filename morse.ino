@@ -1,7 +1,8 @@
+#import "MorseMapping.h"
+
 const int DAH = 130;
 const int CHAR_DELAY = 250;
 const int WORD_DELAY = 300;
-
 
 int BUTTON = 7;
 int LED = 13;
@@ -41,6 +42,20 @@ void addMorse(char m) {
   }
 }
 
+char morseToAscii(char* input) {
+  char truncatedInput[currentMorseCount + 1];
+  strncpy(truncatedInput, input, currentMorseCount);
+  truncatedInput[currentMorseCount] = (char)0;
+
+  for (int i = 0; i < MORSE_CHAR_COUNT; i++) {
+    if (strcmp(truncatedInput, morseMapping[i]) == 0) {
+      return ascii[i];
+    }
+  }
+  
+  return NULL;
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
   unsigned long now = millis();
@@ -77,6 +92,8 @@ void loop() {
         for (int i = 0; i < currentMorseCount; i++) {
           Serial.print(currentMorse[i]);
         }
+        Serial.print(": ");
+        Serial.print(morseToAscii(currentMorse));
         Serial.print("\n");
 
         countedCurrentChar = true;
