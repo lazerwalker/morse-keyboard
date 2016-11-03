@@ -18,8 +18,6 @@ bool countedCurrentTap = false;
 bool countedCurrentChar = false;
 bool countedCurrentSpace = false;
 
-// Array of dits/dahs
-// false = dit, true = dah
 char *currentMorse;
 int currentMorseCount;
 
@@ -63,7 +61,6 @@ char morseToAscii(char *input) {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   unsigned long now = millis();
   unsigned long timeDiff = now - start;
 
