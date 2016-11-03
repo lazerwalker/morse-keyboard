@@ -43,12 +43,8 @@ void addMorse(char m) {
 }
 
 char morseToAscii(char* input) {
-  char truncatedInput[currentMorseCount + 1];
-  strncpy(truncatedInput, input, currentMorseCount);
-  truncatedInput[currentMorseCount] = (char)0;
-
   for (int i = 0; i < MORSE_CHAR_COUNT; i++) {
-    if (strcmp(truncatedInput, morseMapping[i]) == 0) {
+    if (strcmp(input, morseMapping[i]) == 0) {
       return ascii[i];
     }
   }
@@ -88,12 +84,21 @@ void loop() {
         Serial.println("SPACE");
         countedCurrentSpace = true;
       } else if (timeDiff >= CHAR_DELAY && !countedCurrentChar) {
+        char input[currentMorseCount + 1];
+        strncpy(input, currentMorse, currentMorseCount);
+        input[currentMorseCount] = (char)0;
+
         Serial.print("FINISHED CHAR ");
         for (int i = 0; i < currentMorseCount; i++) {
           Serial.print(currentMorse[i]);
         }
         Serial.print(": ");
-        Serial.print(morseToAscii(currentMorse));
+
+        char key = morseToAscii(input);
+        if (key != NULL) {
+          Serial.print(key);
+        }
+
         Serial.print("\n");
 
         countedCurrentChar = true;
