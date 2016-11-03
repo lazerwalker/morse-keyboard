@@ -28,8 +28,17 @@ void setup() {
 }
 
 void resetMorse() {
-  currentMorse = (bool *)(malloc(sizeof(bool) * 5));
+  currentMorse = (bool *)(malloc(sizeof(bool) * 6));
   currentMorseCount = 0;
+}
+
+void addMorse(bool m) {
+  if (currentMorseCount >= 6) {
+    return;
+  } else {
+    currentMorse[currentMorseCount] = m;
+    currentMorseCount++;
+  }
 }
 
 void loop() {
@@ -41,16 +50,13 @@ void loop() {
 
   if (wasDown) {
     if (!countedCurrentTap && timeDiff >= DAH) {
-      currentMorse[currentMorseCount] = true;
-      currentMorseCount++;
-
+      addMorse(true);
       countedCurrentTap = true;
     }
 
     if (!pressed) { // Just released the button
       if (!countedCurrentTap) {
-        currentMorse[currentMorseCount] = false;
-        currentMorseCount++;
+        addMorse(false);
       }
 
       // Time for a new tap
@@ -81,6 +87,7 @@ void loop() {
   wasDown = pressed;
   delay(10);
 }
+
 
 
 
