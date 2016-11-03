@@ -101,6 +101,7 @@ void loop() {
         SpecialCode code = morseToSpecialCode(input);
         if (code != NONE) {
           Serial.println("Special Code!");
+          countedCurrentSpace = true;
         } else {
           Serial.print("FINISHED CHAR ");
           for (int i = 0; i < currentMorseCount; i++) {
