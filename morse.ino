@@ -9,6 +9,8 @@ int LED = 13;
 
 unsigned long start = millis();
 
+typedef enum { NONE, TOGGLE_INPUT_MODE } SpecialCode;
+
 // false = up
 // true = down
 bool wasDown = false;
@@ -29,12 +31,12 @@ void setup() {
 }
 
 void resetMorse() {
-  currentMorse = (char *)(malloc(sizeof(char) * 6));
+  currentMorse = (char *)(malloc(sizeof(char) * 8));
   currentMorseCount = 0;
 }
 
 void addMorse(char m) {
-  if (currentMorseCount >= 6) {
+  if (currentMorseCount >= 8) {
     return;
   } else {
     currentMorse[currentMorseCount] = m;
@@ -42,7 +44,15 @@ void addMorse(char m) {
   }
 }
 
-char morseToAscii(char* input) {
+SpecialCode morseToSpecialCode(char *input) {
+  if (strcmp(input, "........") == 0) {
+    return TOGGLE_INPUT_MODE;
+  }
+
+  return NONE;
+}
+
+char morseToAscii(char *input) {
   for (int i = 0; i < MORSE_CHAR_COUNT; i++) {
     if (strcmp(input, morseMapping[i]) == 0) {
       return ascii[i];
@@ -88,19 +98,23 @@ void loop() {
         strncpy(input, currentMorse, currentMorseCount);
         input[currentMorseCount] = (char)0;
 
-        Serial.print("FINISHED CHAR ");
-        for (int i = 0; i < currentMorseCount; i++) {
-          Serial.print(currentMorse[i]);
+        SpecialCode code = morseToSpecialCode(input);
+        if (code != NONE) {
+          Serial.println("Special Code!");
+        } else {
+          Serial.print("FINISHED CHAR ");
+          for (int i = 0; i < currentMorseCount; i++) {
+            Serial.print(currentMorse[i]);
+          }
+          Serial.print(": ");
+
+          char key = morseToAscii(input);
+          if (key != NULL) {
+            Serial.print(key);
+          }
+
+          Serial.print("\n");
         }
-        Serial.print(": ");
-
-        char key = morseToAscii(input);
-        if (key != NULL) {
-          Serial.print(key);
-        }
-
-        Serial.print("\n");
-
         countedCurrentChar = true;
         resetMorse();
       }
