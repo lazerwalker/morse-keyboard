@@ -110,7 +110,9 @@ void loop() {
           Serial.print(": ");
 
           char key = morseToAscii(input);
-          if (key != NULL) {
+          if (key == NULL) {
+            countedCurrentSpace = true;
+          } else {
             Serial.print(key);
           }
 
