@@ -17,7 +17,7 @@ bool countedCurrentSpace = false;
 
 // Array of dits/dahs
 // false = dit, true = dah
-bool *currentMorse;
+char *currentMorse;
 int currentMorseCount;
 
 void setup() {
@@ -28,11 +28,11 @@ void setup() {
 }
 
 void resetMorse() {
-  currentMorse = (bool *)(malloc(sizeof(bool) * 6));
+  currentMorse = (char *)(malloc(sizeof(char) * 6));
   currentMorseCount = 0;
 }
 
-void addMorse(bool m) {
+void addMorse(char m) {
   if (currentMorseCount >= 6) {
     return;
   } else {
@@ -50,13 +50,13 @@ void loop() {
 
   if (wasDown) {
     if (!countedCurrentTap && timeDiff >= DAH) {
-      addMorse(true);
+      addMorse('-');
       countedCurrentTap = true;
     }
 
     if (!pressed) { // Just released the button
       if (!countedCurrentTap) {
-        addMorse(false);
+        addMorse('.');
       }
 
       // Time for a new tap
@@ -87,7 +87,3 @@ void loop() {
   wasDown = pressed;
   delay(10);
 }
-
-
-
-
