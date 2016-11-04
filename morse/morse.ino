@@ -14,7 +14,7 @@ typedef enum { KEYBOARD, DOTDASH, SPACEBAR } Mode;
 
 // false = up
 // true = down
-bool wasDown = false;
+bool wasPressed = false;
 
 bool countedCurrentTap = false;
 bool countedCurrentChar = false;
@@ -80,12 +80,12 @@ void loop() {
       loopSpaceBar(pressed, now, timeDiff);
   }
   
-  wasDown = pressed;
+  wasPressed = pressed;
   delay(10);
 }
 
 void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
-  if (wasDown) {
+  if (wasPressed) {
     if (!countedCurrentTap && timeDiff >= DAH) {
       addMorse('-');
       countedCurrentTap = true;
@@ -100,7 +100,7 @@ void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
       countedCurrentTap = false;
       start = now;
     }
-  } else { // !wasDown
+  } else { // !wasPressed
     if (pressed) {
       start = millis();
       countedCurrentChar = false;
@@ -144,7 +144,7 @@ void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
 }
 
 void loopDotDash(bool pressed, unsigned long now, unsigned long timeDiff) {
-  if (wasDown) {
+  if (wasPressed) {
     if (!countedCurrentTap && timeDiff >= DAH) {
       Keyboard.write("-");
       Serial.print("-");
@@ -161,7 +161,7 @@ void loopDotDash(bool pressed, unsigned long now, unsigned long timeDiff) {
       countedCurrentTap = false;
       start = now;
     }
-  } else { // !wasDown
+  } else { // !wasPressed
     if (pressed) {
       start = millis();
       countedCurrentChar = false;
@@ -177,15 +177,16 @@ void loopDotDash(bool pressed, unsigned long now, unsigned long timeDiff) {
 }
 
 void loopSpaceBar(bool pressed, unsigned long now, unsigned long timeDiff) {
-  if (pressed && !wasDown) {
+  if (pressed && !wasPressed) {
     Keyboard.press(' ');
     Serial.println("Key down");
   }
 
-  if (!pressed && wasDown) {
+  if (!pressed && wasPressed) {
     Keyboard.release(' ');
     Serial.println("Key up");
   }
 }
+
 
 
