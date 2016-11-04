@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 #include "MorseMapping.h"
 
 const int DAH = 130;
@@ -42,11 +44,18 @@ char lastChar;
 char *lastMorse;
 int lastMorseCount;
 
+uint8_t MODE_ADDR = 0;
+
 Mode currentMode = KEYBOARD;
 
 void setup() {
   Serial.begin(9600);
   Keyboard.begin();
+
+  char mode = EEPROM.read(MODE_ADDR);
+  if (mode != 255) {
+    currentMode = (Mode)mode;
+  }
   
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
@@ -108,6 +117,7 @@ void loop() {
     if (currentMode == NO_MODE) {
       currentMode = KEYBOARD;
     }
+    EEPROM.update(MODE_ADDR, currentMode);
   }
 
   if (currentMode == KEYBOARD) {
@@ -221,3 +231,4 @@ void loopSpaceBar(bool pressed) {
     Serial.println("Key up");
   }
 }
+
