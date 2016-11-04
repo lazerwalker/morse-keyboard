@@ -10,7 +10,12 @@ int LED = 13;
 unsigned long start = millis();
 
 typedef enum { NONE, TOGGLE_INPUT_MODE } SpecialCode;
-typedef enum { KEYBOARD, DOTDASH, SPACEBAR } Mode;
+typedef enum { 
+  KEYBOARD = 0, 
+  DOTDASH, 
+  SPACEBAR, 
+  NO_MODE
+} Mode;
 
 // false = up
 // true = down
@@ -27,10 +32,12 @@ bool detectedDot = false;
 bool detectedDash = false;
 bool detectedChar = false;
 bool detectedSpace = false;
+bool detectedSpecialCode = false;
 
 char *currentMorse;
 int currentMorseCount;
 
+SpecialCode lastCode;
 char lastChar;
 char *lastMorse;
 int lastMorseCount;
@@ -88,11 +95,20 @@ void loop() {
   detectedDash = false;
   detectedChar = false;
   detectedSpace = false;
+  detectedSpecialCode = false;
   
   lastChar = false;
   lastMorseCount = 0;
+  lastCode = NONE;
 
   parseMorse(pressed, now, timeDiff);
+
+  if (detectedSpecialCode && lastCode == TOGGLE_INPUT_MODE) {
+    currentMode = (Mode)(currentMode + 1);
+    if (currentMode == NO_MODE) {
+      currentMode = KEYBOARD;
+    }
+  }
 
   if (currentMode == KEYBOARD) {
       loopKeyboard();
@@ -141,7 +157,8 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
 
         SpecialCode code = morseToSpecialCode(input);
         if (code != NONE) {
-          Serial.println("Special Code!");
+          detectedSpecialCode = true;
+          lastCode = code;
           countedCurrentSpace = true;
         } else {
           detectedChar = true;
@@ -204,6 +221,7 @@ void loopSpaceBar(bool pressed) {
     Serial.println("Key up");
   }
 }
+
 
 
 
