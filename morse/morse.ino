@@ -163,7 +163,7 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
         } else {
           detectedChar = true;
           lastChar = morseToAscii(input);
-          strcpy(lastMorse, currentMorse);
+          strncpy(currentMorse, lastMorse, currentMorseCount);
           
           if (lastChar == NULL) {
             countedCurrentSpace = true;
