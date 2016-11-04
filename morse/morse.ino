@@ -16,12 +16,24 @@ typedef enum { KEYBOARD, DOTDASH, SPACEBAR } Mode;
 // true = down
 bool wasPressed = false;
 
+// Stateful tracking of phrase
 bool countedCurrentTap = false;
 bool countedCurrentChar = false;
 bool countedCurrentSpace = false;
 
+// Tracking for a given frame
+// TODO: Should probably be placed in a data structure and passed around as a non-global
+bool detectedDot = false;
+bool detectedDash = false;
+bool detectedChar = false;
+bool detectedSpace = false;
+
 char *currentMorse;
 int currentMorseCount;
+
+char lastChar;
+char *lastMorse;
+int lastMorseCount;
 
 Mode currentMode = KEYBOARD;
 
@@ -72,28 +84,41 @@ void loop() {
 
   bool pressed = !digitalRead(BUTTON);
 
+  detectedDot = false;
+  detectedDash = false;
+  detectedChar = false;
+  detectedSpace = false;
+  
+  lastChar = false;
+  lastMorseCount = 0;
+
+  parseMorse(pressed, now, timeDiff);
+
   if (currentMode == KEYBOARD) {
-      loopKeyboard(pressed, now, timeDiff);
+      loopKeyboard();
   } else if (currentMode == DOTDASH) {
-      loopDotDash(pressed, now, timeDiff);
+      loopDotDash();
   } else if (currentMode == SPACEBAR) {
-      loopSpaceBar(pressed, now, timeDiff);
+      loopSpaceBar(pressed);
   }
   
   wasPressed = pressed;
   delay(10);
 }
 
-void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
+void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
   if (wasPressed) {
     if (!countedCurrentTap && timeDiff >= DAH) {
+      detectedDash = true;
       addMorse('-');
       countedCurrentTap = true;
+      detectedDash = true;
     }
 
     if (!pressed) { // Just released the button
       if (!countedCurrentTap) {
         addMorse('.');
+        detectedDot = true;
       }
 
       // Time for a new tap
@@ -107,8 +132,7 @@ void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
       countedCurrentSpace = false;
     } else {
       if (timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
-        Serial.println("SPACE");
-        Keyboard.write(" ");
+        detectedSpace = true;
         countedCurrentSpace = true;
       } else if (timeDiff >= CHAR_DELAY && !countedCurrentChar) {
         char input[currentMorseCount + 1];
@@ -120,21 +144,13 @@ void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
           Serial.println("Special Code!");
           countedCurrentSpace = true;
         } else {
-          Serial.print("FINISHED CHAR ");
-          for (int i = 0; i < currentMorseCount; i++) {
-            Serial.print(currentMorse[i]);
-          }
-          Serial.print(": ");
-
-          char key = morseToAscii(input);
-          if (key == NULL) {
+          detectedChar = true;
+          lastChar = morseToAscii(input);
+          strcpy(lastMorse, currentMorse);
+          
+          if (lastChar == NULL) {
             countedCurrentSpace = true;
-          } else {
-            Keyboard.write(key);
-            Serial.print(key);
           }
-
-          Serial.print("\n");
         }
         countedCurrentChar = true;
         resetMorse();
@@ -142,41 +158,42 @@ void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
     }
   }
 }
+void loopKeyboard() {
+  if (detectedSpace) {
+    Keyboard.print(' ');
+    Serial.println("SPACE");
+  }
 
-void loopDotDash(bool pressed, unsigned long now, unsigned long timeDiff) {
-  if (wasPressed) {
-    if (!countedCurrentTap && timeDiff >= DAH) {
-      Keyboard.write("-");
-      Serial.print("-");
-      countedCurrentTap = true;
+  if (detectedChar) {
+    Keyboard.write(lastChar);
+    Serial.print("FINISHED CHAR ");
+    for (int i = 0; i < lastMorseCount; i++) {
+      Serial.print(lastMorse[i]);
     }
+    Serial.print(": ");
+    Serial.print(lastChar);
+    Serial.print("\n");
+  }
+}
 
-    if (!pressed) { // Just released the button
-      if (!countedCurrentTap) {
-        Keyboard.write('.');
-        Serial.print('.');
-      }
+void loopDotDash() {
+  if (detectedDot) {
+    Keyboard.write('.');
+    Serial.print('.');
+  }
 
-      // Time for a new tap
-      countedCurrentTap = false;
-      start = now;
-    }
-  } else { // !wasPressed
-    if (pressed) {
-      start = millis();
-      countedCurrentChar = false;
-      countedCurrentSpace = false;
-    } else {
-      if (timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
-        Serial.println("SPACE");
-        Keyboard.write(" ");
-        countedCurrentSpace = true;
-      }
-    }
+  if (detectedDash) {
+    Keyboard.write("-");
+    Serial.print("-");
+  }
+
+  if (detectedSpace) {
+    Serial.println("SPACE");
+    Keyboard.write(" ");
   }  
 }
 
-void loopSpaceBar(bool pressed, unsigned long now, unsigned long timeDiff) {
+void loopSpaceBar(bool pressed) {
   if (pressed && !wasPressed) {
     Keyboard.press(' ');
     Serial.println("Key down");
@@ -187,6 +204,11 @@ void loopSpaceBar(bool pressed, unsigned long now, unsigned long timeDiff) {
     Serial.println("Key up");
   }
 }
+
+
+
+
+
 
 
 
