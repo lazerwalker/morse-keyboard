@@ -111,11 +111,11 @@ void loop() {
   }
 
   if (currentMode == KEYBOARD) {
-      loopKeyboard();
+    loopKeyboard();
   } else if (currentMode == DOTDASH) {
-      loopDotDash();
+    loopDotDash();
   } else if (currentMode == SPACEBAR) {
-      loopSpaceBar(pressed);
+    loopSpaceBar(pressed);
   }
   
   wasPressed = pressed;
@@ -221,12 +221,3 @@ void loopSpaceBar(bool pressed) {
     Serial.println("Key up");
   }
 }
-
-
-
-
-
-
-
-
-
