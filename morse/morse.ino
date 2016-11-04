@@ -1,4 +1,4 @@
-#import "MorseMapping.h"
+#include "MorseMapping.h"
 
 const int DAH = 130;
 const int CHAR_DELAY = 250;
@@ -23,6 +23,8 @@ int currentMorseCount;
 
 void setup() {
   Serial.begin(9600);
+  Keyboard.begin();
+  
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
   resetMorse();
@@ -89,6 +91,7 @@ void loop() {
     } else {
       if (timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
         Serial.println("SPACE");
+        Keyboard.write(" ");
         countedCurrentSpace = true;
       } else if (timeDiff >= CHAR_DELAY && !countedCurrentChar) {
         char input[currentMorseCount + 1];
@@ -110,6 +113,7 @@ void loop() {
           if (key == NULL) {
             countedCurrentSpace = true;
           } else {
+            Keyboard.write(key);
             Serial.print(key);
           }
 
