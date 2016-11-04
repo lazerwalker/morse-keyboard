@@ -10,16 +10,20 @@ int LED = 13;
 unsigned long start = millis();
 
 typedef enum { NONE, TOGGLE_INPUT_MODE } SpecialCode;
+typedef enum { KEYBOARD, DOTDASH, SPACEBAR } Mode;
 
 // false = up
 // true = down
 bool wasDown = false;
+
 bool countedCurrentTap = false;
 bool countedCurrentChar = false;
 bool countedCurrentSpace = false;
 
 char *currentMorse;
 int currentMorseCount;
+
+Mode currentMode = KEYBOARD;
 
 void setup() {
   Serial.begin(9600);
@@ -68,6 +72,19 @@ void loop() {
 
   bool pressed = !digitalRead(BUTTON);
 
+  if (currentMode == KEYBOARD) {
+      loopKeyboard(pressed, now, timeDiff);
+  } else if (currentMode == DOTDASH) {
+      loopDotDash(pressed, now, timeDiff);
+  } else if (currentMode == SPACEBAR) {
+      loopSpaceBar(pressed, now, timeDiff);
+  }
+  
+  wasDown = pressed;
+  delay(10);
+}
+
+void loopKeyboard(bool pressed, unsigned long now, unsigned long timeDiff) {
   if (wasDown) {
     if (!countedCurrentTap && timeDiff >= DAH) {
       addMorse('-');
@@ -124,6 +141,51 @@ void loop() {
       }
     }
   }
-  wasDown = pressed;
-  delay(10);
 }
+
+void loopDotDash(bool pressed, unsigned long now, unsigned long timeDiff) {
+  if (wasDown) {
+    if (!countedCurrentTap && timeDiff >= DAH) {
+      Keyboard.write("-");
+      Serial.print("-");
+      countedCurrentTap = true;
+    }
+
+    if (!pressed) { // Just released the button
+      if (!countedCurrentTap) {
+        Keyboard.write('.');
+        Serial.print('.');
+      }
+
+      // Time for a new tap
+      countedCurrentTap = false;
+      start = now;
+    }
+  } else { // !wasDown
+    if (pressed) {
+      start = millis();
+      countedCurrentChar = false;
+      countedCurrentSpace = false;
+    } else {
+      if (timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
+        Serial.println("SPACE");
+        Keyboard.write(" ");
+        countedCurrentSpace = true;
+      }
+    }
+  }  
+}
+
+void loopSpaceBar(bool pressed, unsigned long now, unsigned long timeDiff) {
+  if (pressed && !wasDown) {
+    Keyboard.press(' ');
+    Serial.println("Key down");
+  }
+
+  if (!pressed && wasDown) {
+    Keyboard.release(' ');
+    Serial.println("Key up");
+  }
+}
+
+
