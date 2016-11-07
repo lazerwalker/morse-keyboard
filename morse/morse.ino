@@ -2,9 +2,9 @@
 
 #include "MorseMapping.h"
 
-const int DAH = 130;
-const int CHAR_DELAY = 250;
-const int WORD_DELAY = 300;
+int DASH = 130;
+int CHAR_DELAY = 250;
+int WORD_DELAY = 300;
 
 int BUTTON = 7;
 int LED = 13;
@@ -15,7 +15,8 @@ typedef enum { NONE, TOGGLE_INPUT_MODE } SpecialCode;
 typedef enum { 
   KEYBOARD = 0, 
   DOTDASH, 
-  SPACEBAR, 
+  SPACEBAR,
+  WPM,
   NO_MODE
 } Mode;
 
@@ -30,6 +31,7 @@ bool countedCurrentSpace = false;
 
 // Tracking for a given frame
 // TODO: Should probably be placed in a data structure and passed around as a non-global
+bool detectedDown = false;
 bool detectedDot = false;
 bool detectedDash = false;
 bool detectedChar = false;
@@ -45,6 +47,11 @@ char *lastMorse;
 int lastMorseCount;
 
 uint8_t MODE_ADDR = 0;
+uint8_t WPM_ADDR = 1;
+
+// WPM detector
+unsigned long timestamps[8];
+int timestampCount = 0; 
 
 Mode currentMode = KEYBOARD;
 
@@ -56,6 +63,12 @@ void setup() {
   if (mode != 255) {
     currentMode = (Mode)mode;
   }
+
+  int wpm = EEPROM.read(WPM_ADDR);
+  if (wpm == 255) { // Never manually set, use the default
+    wpm = 20;
+  }
+  setSpeedFromWPM(wpm);
   
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
@@ -77,7 +90,7 @@ void addMorse(char m) {
 }
 
 SpecialCode morseToSpecialCode(char *input) {
-  if (strcmp(input, "........") == 0) {
+  if (strcmp(input, ".......-") == 0) {
     return TOGGLE_INPUT_MODE;
   }
 
@@ -94,12 +107,20 @@ char morseToAscii(char *input) {
   return NULL;
 }
 
+void setSpeedFromWPM(int wpm) {
+  int dot = 1200.0 / wpm;
+  DASH = 3 * dot;
+  CHAR_DELAY = 3 * dot;
+  WORD_DELAY = 7 * dot;
+}
+
 void loop() {
   unsigned long now = millis();
   unsigned long timeDiff = now - start;
 
   bool pressed = !digitalRead(BUTTON);
 
+  detectedDown = false;
   detectedDot = false;
   detectedDash = false;
   detectedChar = false;
@@ -126,6 +147,8 @@ void loop() {
     loopDotDash();
   } else if (currentMode == SPACEBAR) {
     loopSpaceBar(pressed);
+  } else if (currentMode == WPM) {
+    loopWPM();
   }
   
   wasPressed = pressed;
@@ -156,6 +179,7 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
       start = millis();
       countedCurrentChar = false;
       countedCurrentSpace = false;
+      detectedDown = true;
     } else {
       if (timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
         detectedSpace = true;
@@ -231,4 +255,36 @@ void loopSpaceBar(bool pressed) {
     Serial.println("Key up");
   }
 }
+
+void loopWPM() {
+  if (detectedDown) {
+    unsigned long now = millis();
+
+    if (timestampCount == 8) {
+      timestampCount = 7;
+      memmove(&timestamps, &timestamps[1], 7*sizeof(unsigned long));
+    }
+    
+    timestamps[timestampCount] = now;
+
+    if (timestampCount > 2) {
+      unsigned long diff = timestamps[timestampCount] - timestamps[0];
+      float avg = diff / timestampCount;
+      avg /= 2.0; // Single dot's worth of time between dots
+      
+      Serial.println(timestampCount);
+      Serial.println(diff);
+      Serial.println(avg);
+
+      float wpm = 1200.0 / avg;
+      Serial.println(wpm);
+
+      Serial.println("");
+    }
+    
+    timestampCount++;
+  }
+}
+
+
 
