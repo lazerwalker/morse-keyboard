@@ -16,8 +16,8 @@ typedef enum {
   KEYBOARD = 0, 
   DOTDASH, 
   SPACEBAR,
-  WPM,
-  NO_MODE
+  NO_MODE,
+  WPM  
 } Mode;
 
 // false = up
@@ -36,6 +36,7 @@ bool detectedDot = false;
 bool detectedDash = false;
 bool detectedChar = false;
 bool detectedSpace = false;
+bool detectedLongPress = false;
 bool detectedSpecialCode = false;
 
 char *currentMorse;
@@ -112,6 +113,7 @@ void setSpeedFromWPM(int wpm) {
   DASH = 3 * dot;
   CHAR_DELAY = 3 * dot;
   WORD_DELAY = 7 * dot;
+  LONG_PRESS = 3 * DASH;
 }
 
 void loop() {
@@ -125,6 +127,7 @@ void loop() {
   detectedDash = false;
   detectedChar = false;
   detectedSpace = false;
+  detectedLongPress = false;
   detectedSpecialCode = false;
   
   lastChar = false;
@@ -134,6 +137,11 @@ void loop() {
   parseMorse(pressed, now, timeDiff);
 
   if (detectedSpecialCode && lastCode == TOGGLE_INPUT_MODE) {
+    // TODO: Toggle WPM Mode
+  }
+
+  if (detectedLongPress && currentMode != WPM) {
+    // Toggle mode
     currentMode = (Mode)(currentMode + 1);
     if (currentMode == NO_MODE) {
       currentMode = KEYBOARD;
@@ -157,11 +165,13 @@ void loop() {
 
 void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
   if (wasPressed) {
-    if (!countedCurrentTap && timeDiff >= DAH) {
+    if (!countedCurrentTap && timeDiff >= LONG_PRESS) {
+      detectedLongPress = true;
+      countedCurrentTap = true;
+    } else if (!countedCurrentTap && timeDiff >= DASH) {
       detectedDash = true;
       addMorse('-');
       countedCurrentTap = true;
-      detectedDash = true;
     }
 
     if (!pressed) { // Just released the button
