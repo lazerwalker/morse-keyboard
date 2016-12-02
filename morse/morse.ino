@@ -5,13 +5,14 @@
 int DASH = 130;
 int CHAR_DELAY = 250;
 int WORD_DELAY = 300;
+int LONG_PRESS = 300;
 
 int BUTTON = 7;
 int LED = 13;
 
 unsigned long start = millis();
 
-typedef enum { NONE, TOGGLE_INPUT_MODE } SpecialCode;
+typedef enum { NONE, TOGGLE_WPM_MODE, RESET_WPM } SpecialCode;
 typedef enum { 
   KEYBOARD = 0, 
   DOTDASH, 
@@ -54,6 +55,10 @@ uint8_t WPM_ADDR = 1;
 unsigned long timestamps[8];
 int timestampCount = 0; 
 
+const int defaultWPM = 15;
+int currentWPM;
+char *currentWPMString;
+
 Mode currentMode = KEYBOARD;
 
 void setup() {
@@ -65,11 +70,11 @@ void setup() {
     currentMode = (Mode)mode;
   }
 
-  int wpm = EEPROM.read(WPM_ADDR);
-  if (wpm == 255) { // Never manually set, use the default
-    wpm = 20;
+  currentWPM = EEPROM.read(WPM_ADDR);
+  if (currentWPM == 255) { // Never manually set, use the default
+    currentWPM = defaultWPM;
   }
-  setSpeedFromWPM(wpm);
+  setSpeedFromWPM(currentWPM);
   
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
@@ -92,7 +97,9 @@ void addMorse(char m) {
 
 SpecialCode morseToSpecialCode(char *input) {
   if (strcmp(input, ".......-") == 0) {
-    return TOGGLE_INPUT_MODE;
+    return TOGGLE_WPM_MODE;
+  } else if (strcmp(input, "------.") == 0) {
+    return RESET_WPM;
   }
 
   return NONE;
@@ -136,8 +143,13 @@ void loop() {
 
   parseMorse(pressed, now, timeDiff);
 
-  if (detectedSpecialCode && lastCode == TOGGLE_INPUT_MODE) {
-    // TODO: Toggle WPM Mode
+  if (detectedSpecialCode) {
+    if (lastCode == TOGGLE_WPM_MODE) {
+      currentMode = WPM;
+      enterWPMMode();
+    } else if (lastCode == RESET_WPM) {
+      resetWPM();
+    }
   }
 
   if (detectedLongPress && currentMode != WPM) {
@@ -267,34 +279,37 @@ void loopSpaceBar(bool pressed) {
 }
 
 void loopWPM() {
-  if (detectedDown) {
-    unsigned long now = millis();
-
-    if (timestampCount == 8) {
-      timestampCount = 7;
-      memmove(&timestamps, &timestamps[1], 7*sizeof(unsigned long));
-    }
+  if (detectedChar) {
+    // TODO: Only do something if it's a number
+    currentWPMString += detectedChar;
+    Keyboard.write(detectedChar);
     
-    timestamps[timestampCount] = now;
-
-    if (timestampCount > 2) {
-      unsigned long diff = timestamps[timestampCount] - timestamps[0];
-      float avg = diff / timestampCount;
-      avg /= 2.0; // Single dot's worth of time between dots
-      
-      Serial.println(timestampCount);
-      Serial.println(diff);
-      Serial.println(avg);
-
-      float wpm = 1200.0 / avg;
-      Serial.println(wpm);
-
-      Serial.println("");
+  }
+  if (detectedSpecialCode && detectedSpecialCode == TOGGLE_WPM_MODE) {
+    int wpm = atoi(currentWPMString);
+    if (wpm != 0) {
+      setWPM(wpm);
+      Keyboard.println("\nSetting keyboard to " + String(currentWPMString) + " WPM.");
+    } else {
+      Keyboard.println("\nAn error occurred, exiting WPM setting mode without doing anything");
     }
-    
-    timestampCount++;
+    currentMode = (Mode)EEPROM.read(MODE_ADDR);
   }
 }
 
+void enterWPMMode() {
+  currentWPMString = "";
+  Keyboard.println("Welcome to WPM Mode! Current speed is "  + String(currentWPM) + " WPM. Enter a new number by entering the corresponding number in morse.");
+}
 
+void setWPM(int wpm) {
+  setSpeedFromWPM(defaultWPM);
+  EEPROM.update(WPM_ADDR, defaultWPM);
+  currentWPM = defaultWPM;  
+}
+
+void resetWPM() {
+  Keyboard.println("Resetting WPM to " + String(defaultWPM) + " WPM.");
+  setWPM(defaultWPM);
+}
 
