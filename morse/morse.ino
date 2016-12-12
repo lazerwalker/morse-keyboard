@@ -29,6 +29,7 @@ bool wasPressed = false;
 bool countedCurrentTap = false;
 bool countedCurrentChar = false;
 bool countedCurrentSpace = false;
+bool countedCurrentLongPress = false;
 
 // Tracking for a given frame
 // TODO: Should probably be placed in a data structure and passed around as a non-global
@@ -84,6 +85,7 @@ void setup() {
 void resetMorse() {
   currentMorse = (char *)(malloc(sizeof(char) * 8));
   currentMorseCount = 0;
+  countedCurrentLongPress = false;
 }
 
 void addMorse(char m) {
@@ -120,7 +122,7 @@ void setSpeedFromWPM(int wpm) {
   DASH = 3 * dot;
   CHAR_DELAY = 3 * dot;
   WORD_DELAY = 7 * dot;
-  LONG_PRESS = 3 * DASH;
+  LONG_PRESS = 9 * dot;
 }
 
 void loop() {
@@ -177,8 +179,9 @@ void loop() {
 
 void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
   if (wasPressed) {
-    if (!countedCurrentTap && timeDiff >= LONG_PRESS) {
+    if (!countedCurrentLongPress  && timeDiff >= LONG_PRESS) {
       detectedLongPress = true;
+      countedCurrentLongPress = true;
       countedCurrentTap = true;
     } else if (!countedCurrentTap && timeDiff >= DASH) {
       detectedDash = true;
