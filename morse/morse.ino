@@ -160,6 +160,7 @@ void loop() {
     if (currentMode == NO_MODE) {
       currentMode = KEYBOARD;
     }
+    Keyboard.println("\nTelegraph Key input mode changed!");
     EEPROM.update(MODE_ADDR, currentMode);
   }
 
