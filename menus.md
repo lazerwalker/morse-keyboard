@@ -1,6 +1,6 @@
 ........ triggers:
 
-# Welcome to the TeleKey!
+TELEGRAPH KEY SETTINGS
 
 Tap the correct sequence to choose a menu option.
 Hold down the key to quit.
@@ -8,10 +8,13 @@ Hold down the key to quit.
 Confused? Just quickly tap the telegraph key once for instructions. 
 
 .       How To Use
-..      Morse Code Chart
-...     Change WPM / Input Speed
-....    Change Input Mode
-......  Credits
+..      Change WPM / Input Speed
+...     Change Input Mode
+...     [Enable / Disable] Auto-Space
+....    Switch to [Uppercase]
+
+Hold down the key to quit.
+
 
 # How To Use
 
@@ -31,9 +34,6 @@ This is useful if you want to send messages in morse code to your friends!
 In this mode, the telegraph key just acts like a space bar. You can think of it like a one-button keyboard.
 This mode is mostly useful if you're a developer who wants to build a custom experience using the hardware,
 as it's the only mode that triggers discrete keydown and keyup events. 
-
-# Morse Code Chart
-//TODO
 
 # Change WPM / Input Speed
 
