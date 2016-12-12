@@ -12,7 +12,6 @@ int LED = 13;
 
 unsigned long start = millis();
 
-typedef enum { NONE, TOGGLE_WPM_MODE, RESET_WPM } SpecialCode;
 typedef enum { 
   KEYBOARD = 0, 
   DOTDASH, 
@@ -44,7 +43,6 @@ bool detectedSpecialCode = false;
 char *currentMorse;
 int currentMorseCount;
 
-SpecialCode lastCode;
 char lastChar;
 char *lastMorse;
 int lastMorseCount;
@@ -97,16 +95,6 @@ void addMorse(char m) {
   }
 }
 
-SpecialCode morseToSpecialCode(char *input) {
-  if (strcmp(input, ".......-") == 0) {
-    return TOGGLE_WPM_MODE;
-  } else if (strcmp(input, "------.") == 0) {
-    return RESET_WPM;
-  }
-
-  return NONE;
-}
-
 char morseToAscii(char *input) {
   for (int i = 0; i < MORSE_CHAR_COUNT; i++) {
     if (strcmp(input, morseMapping[i]) == 0) {
@@ -137,22 +125,12 @@ void loop() {
   detectedChar = false;
   detectedSpace = false;
   detectedLongPress = false;
-  detectedSpecialCode = false;
   
   lastChar = false;
   lastMorseCount = 0;
   lastCode = NONE;
 
   parseMorse(pressed, now, timeDiff);
-
-  if (detectedSpecialCode) {
-    if (lastCode == TOGGLE_WPM_MODE) {
-      currentMode = WPM;
-      enterWPMMode();
-    } else if (lastCode == RESET_WPM) {
-      resetWPM();
-    }
-  }
 
   if (detectedLongPress && currentMode != WPM) {
     // Toggle mode
@@ -215,20 +193,14 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
         strncpy(input, currentMorse, currentMorseCount);
         input[currentMorseCount] = (char)0;
 
-        SpecialCode code = morseToSpecialCode(input);
-        if (code != NONE) {
-          detectedSpecialCode = true;
-          lastCode = code;
+        detectedChar = true;
+        lastChar = morseToAscii(input);
+        strncpy(currentMorse, lastMorse, currentMorseCount);
+        
+        if (lastChar == NULL) {
           countedCurrentSpace = true;
-        } else {
-          detectedChar = true;
-          lastChar = morseToAscii(input);
-          strncpy(currentMorse, lastMorse, currentMorseCount);
-          
-          if (lastChar == NULL) {
-            countedCurrentSpace = true;
-          }
         }
+
         countedCurrentChar = true;
         resetMorse();
       }
@@ -288,16 +260,6 @@ void loopWPM() {
     currentWPMString += detectedChar;
     Keyboard.write(detectedChar);
     
-  }
-  if (detectedSpecialCode && detectedSpecialCode == TOGGLE_WPM_MODE) {
-    int wpm = atoi(currentWPMString);
-    if (wpm != 0) {
-      setWPM(wpm);
-      Keyboard.println("\nSetting keyboard to " + String(currentWPMString) + " WPM.");
-    } else {
-      Keyboard.println("\nAn error occurred, exiting WPM setting mode without doing anything");
-    }
-    currentMode = (Mode)EEPROM.read(MODE_ADDR);
   }
 }
 
