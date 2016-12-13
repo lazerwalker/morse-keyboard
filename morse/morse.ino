@@ -17,18 +17,27 @@ typedef enum {
   DOTDASH, 
   SPACEBAR,
   NO_MODE,
-  WPM  
+  MENU
 } Mode;
+
+typedef enum {
+  MAINMENU = 0,
+  HELP,
+  WPM,
+  INPUT_MODE
+} Menu;
 
 // false = up
 // true = down
 bool wasPressed = false;
+bool isPressed = false;
 
 // Stateful tracking of phrase
 bool countedCurrentTap = false;
 bool countedCurrentChar = false;
 bool countedCurrentSpace = false;
 bool countedCurrentLongPress = false;
+bool didChangeMode = false;
 
 // Tracking for a given frame
 // TODO: Should probably be placed in a data structure and passed around as a non-global
@@ -59,6 +68,7 @@ int currentWPM;
 char *currentWPMString;
 
 Mode currentMode = KEYBOARD;
+Menu currentMenu = MAINMENU;
 
 void setup() {
   Serial.begin(9600);
@@ -67,6 +77,11 @@ void setup() {
   char mode = EEPROM.read(MODE_ADDR);
   if (mode != 255) {
     currentMode = (Mode)mode;
+  }
+  if (currentMode == MENU) {
+    // This shouldn't ever happen!
+    currentMode = KEYBOARD;
+    EEPROM.update(MODE_ADDR, KEYBOARD);
   }
 
   currentWPM = EEPROM.read(WPM_ADDR);
@@ -83,7 +98,6 @@ void setup() {
 void resetMorse() {
   currentMorse = (char *)(malloc(sizeof(char) * 8));
   currentMorseCount = 0;
-  countedCurrentLongPress = false;
 }
 
 void addMorse(char m) {
@@ -117,7 +131,7 @@ void loop() {
   unsigned long now = millis();
   unsigned long timeDiff = now - start;
 
-  bool pressed = !digitalRead(BUTTON);
+  isPressed = !digitalRead(BUTTON);
 
   detectedDown = false;
   detectedDot = false;
@@ -128,37 +142,90 @@ void loop() {
   
   lastChar = false;
   lastMorseCount = 0;
-  lastCode = NONE;
 
-  parseMorse(pressed, now, timeDiff);
+  parseMorse(isPressed, now, timeDiff);
 
-  if (detectedLongPress && currentMode != WPM) {
-    // Toggle mode
-    currentMode = (Mode)(currentMode + 1);
-    if (currentMode == NO_MODE) {
-      currentMode = KEYBOARD;
-    }
-    Keyboard.println("\nTelegraph Key input mode changed!");
-    EEPROM.update(MODE_ADDR, currentMode);
+  if (currentMode == MENU) {
+    loopMenu();
+  } else {
+    loopInput();
   }
-
-  if (currentMode == KEYBOARD) {
-    loopKeyboard();
-  } else if (currentMode == DOTDASH) {
-    loopDotDash();
-  } else if (currentMode == SPACEBAR) {
-    loopSpaceBar(pressed);
-  } else if (currentMode == WPM) {
-    loopWPM();
-  }
-  
-  wasPressed = pressed;
+ 
+  wasPressed = isPressed;
   delay(10);
 }
 
+void loopInput() {
+  if (detectedLongPress) {
+    Keyboard.println("Entering menu");
+    currentMode = MENU;
+    didChangeMode = true;
+    changeMenu(MAINMENU);
+    return;
+  }
+
+  switch(currentMode) {
+    case KEYBOARD:
+      loopKeyboard();
+      break;
+    case DOTDASH:
+      loopDotDash();
+      break;
+    case SPACEBAR:
+      loopSpaceBar(isPressed);
+      break;
+  }
+}
+
+void loopMenu() {
+  if (detectedLongPress) {
+    if (currentMenu == MAINMENU) {
+      didChangeMode = true;
+      Keyboard.println("Exiting main menu");
+      // Exit the menu, restore saved mode
+      char mode = EEPROM.read(MODE_ADDR);
+      if (mode != 255) {
+        currentMode = (Mode)mode;
+      } else {
+        currentMode = KEYBOARD;
+      }
+      EEPROM.update(MODE_ADDR, currentMode);
+    } else {
+      // Go back to the menu
+      Keyboard.println("Returning to main menu");
+      changeMenu(MAINMENU);
+    }
+    return;
+  }
+
+  switch(currentMenu) {
+    case MAINMENU:
+      loopMainMenu();
+      break;
+    case HELP:
+      break;
+    case WPM:
+      loopWPM();
+      break;
+    case INPUT_MODE:
+      loopInputMode();
+      break;
+  }
+}
+
 void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
-  if (wasPressed) {
-    if (!countedCurrentLongPress  && timeDiff >= LONG_PRESS) {
+  if (didChangeMode) {
+    if(wasPressed && !pressed) {
+      Keyboard.println("Exit didChangeMode");
+      didChangeMode = false;
+      resetMorse();
+      countedCurrentLongPress = false;
+    }
+    return;      
+  }
+  
+  if (wasPressed) {   
+    if (!countedCurrentLongPress && timeDiff >= LONG_PRESS) {
       detectedLongPress = true;
       countedCurrentLongPress = true;
       countedCurrentTap = true;
@@ -189,13 +256,14 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
         detectedSpace = true;
         countedCurrentSpace = true;
       } else if (timeDiff >= CHAR_DELAY && !countedCurrentChar) {
-        char input[currentMorseCount + 1];
-        strncpy(input, currentMorse, currentMorseCount);
-        input[currentMorseCount] = (char)0;
+        currentMorse[currentMorseCount] = '\0';
+        
+        free(lastMorse);
+        lastMorse = new char[currentMorseCount];
+        strcpy(lastMorse, currentMorse);
 
         detectedChar = true;
-        lastChar = morseToAscii(input);
-        strncpy(currentMorse, lastMorse, currentMorseCount);
+        lastChar = morseToAscii(lastMorse);
         
         if (lastChar == NULL) {
           countedCurrentSpace = true;
@@ -207,6 +275,11 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
     }
   }
 }
+
+/* ******************
+* Keyboard Modes
+********************/
+
 void loopKeyboard() {
   if (detectedSpace) {
     Keyboard.print(' ');
@@ -254,13 +327,64 @@ void loopSpaceBar(bool pressed) {
   }
 }
 
+/* ******************
+* Menu Modes
+********************/
+
+void changeMenu(Menu menu) {
+  Keyboard.println("Changing menu to " + String(menu));
+  currentMenu = menu;
+  switch(menu) {
+    case HELP:
+      break;
+    case WPM:
+      break;
+    case INPUT_MODE:
+      break;
+    case MAINMENU:
+    default:
+      Keyboard.println("\nTELEGRAPH KEY SETTINGS\n\n"
+                      "Tap the correct sequence to choose a menu option.\n"
+                      "Hold down the key to quit.\n"
+                      "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
+                      ".       How To Use\n"
+                      "..      Change WPM / Input Speed\n"
+                      "...     Change Input Mode\n"
+                      "....     [Enable / Disable] Auto-Space\n"
+                      ".....    Switch to [Uppercase]\n");
+      break;
+  }
+  resetMorse();
+}
+
+ void loopMainMenu() {
+   if (detectedChar) {
+     if (strcmp(lastMorse, ".") == 0) {
+       changeMenu(HELP);
+     } else if (strcmp(lastMorse, "..") == 0) {
+       changeMenu(WPM);
+     } else if (strcmp(lastMorse, "...") == 0) {
+       changeMenu(INPUT_MODE);
+     } else if (strcmp(lastMorse, "....") == 0) {
+       // Enable/disable autospace    
+     } else if (strcmp(lastMorse, ".....") == 0) {
+       // Toggle lowercase/uppercase
+     }  
+
+   }
+ }
+
+void loopInputMode() {
+
+}
+
 void loopWPM() {
   if (detectedChar) {
     // TODO: Only do something if it's a number
     currentWPMString += detectedChar;
     Keyboard.write(detectedChar);
-    
   }
+  // TODO: Check if we should exit  
 }
 
 void enterWPMMode() {
@@ -278,4 +402,16 @@ void resetWPM() {
   Keyboard.println("Resetting WPM to " + String(defaultWPM) + " WPM.");
   setWPM(defaultWPM);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
