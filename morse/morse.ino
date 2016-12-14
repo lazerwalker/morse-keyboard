@@ -247,6 +247,7 @@ void loopMenu() {
     } else {
       // Go back to the menu
       Keyboard.println("Returning to main menu");
+      didChangeMode = true;
       changeMenu(MAINMENU);
     }
     return;
