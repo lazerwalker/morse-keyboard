@@ -32,11 +32,9 @@ static char* mainMenuText = "\nTELEGRAPH KEY SETTINGS\n\n"
                       "Tap the correct sequence to choose a menu option.\n"
                       "Hold down the key to quit.\n"
                       "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
-                      ".        How To Use\n"
-                      "..       Reset Input Speed to Default\n"                      
-                      "...       Change WPM / Input Speed\n"
-                      "....      Change Input Mode";
-
+                      ".         How To Use\n"
+                      "..        Reset Input Speed to Default";                      
+                      
 static char *helpText = "\nHOW TO USE\n\n"
                         "This is a morse code keyboard. You use it to type morse code!\n"
                         "There are three input modes:\n\n"
@@ -399,6 +397,9 @@ void changeMenu(Menu menu) {
     case MAINMENU:
     default:
       Keyboard.println(mainMenuText);
+      Keyboard.println("...       Change WPM / Input Speed (Current Speed: " + String(currentWPM) + " WPM)");
+      Keyboard.println("....      Change Input Mode");
+
       if (autoSpace) {
         Keyboard.println(".....     Disable Auto-Space");        
       } else {
@@ -515,6 +516,7 @@ void resetWPM() {
   Keyboard.println("Resetting WPM to " + String(defaultWPM) + " WPM.");
   setWPM(defaultWPM);
 }
+
 
 
 
