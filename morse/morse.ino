@@ -24,8 +24,54 @@ typedef enum {
   MAINMENU = 0,
   HELP,
   WPM,
-  INPUT_MODE
+  INPUT_MODE,
+  NONE
 } Menu;
+
+static char* mainMenuText = "\nTELEGRAPH KEY SETTINGS\n\n"
+                      "Tap the correct sequence to choose a menu option.\n"
+                      "Hold down the key to quit.\n"
+                      "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
+                      ".       How To Use\n"
+                      "..      Change WPM / Input Speed\n"
+                      "...     Change Input Mode\n"
+                      "....     [Enable / Disable] Auto-Space\n"
+                      ".....    Switch to [Uppercase]\n";
+
+static char *helpText = "\nHOW TO USE\n\n"
+                        "This is a morse code keyboard. You use it to type morse code!\n"
+                        "There are three input modes:\n\n"
+                        "1. Morse Keyboard\n"
+                        "This is the default mode. As you key in valid morse code letters, the device will type the corresponding characters as if you'd typed them yourself on a normal keyboard.\n" 
+                        "For example, if you key in \"...\", then \"---\", then \"...\", your computer will act as if you just typed the letters \"SOS\".\n\n"
+
+                        "2. Dots and Dashes\n"
+                        "Every time you key in a short press (a \"dot\") or a long press (a \"dash\"), the device will type a \".\" or \"-\" character.\n" 
+                        "This is useful if you want to send messages in morse code to your friends!\n\n"
+
+                        "3. Space Bar\n"
+                        "In this mode, the telegraph key just acts like a space bar. You can think of it like a one-button keyboard.\n"
+                        "This mode is mostly useful if you're a developer who wants to build a custom experience using the hardware,\n"
+                        "as it's the only mode that triggers discrete keydown and keyup events.\n";
+  
+static char *wpmText = "\nCHANGE WPM\n\n"
+                      "Your current input speed is 5 WPM.\n"
+                      "To change the speed, enter a number or something.\n";
+
+static char *inputModeText = "\nINPUT MODE\n\n"
+                            "Your current mode is \"Morse Keyboard\".\n" 
+                            "Tap the correct sequence to choose a new input mode.\n"
+                            "Hold the key down to go back.\n\n"
+
+                            ".       Morse Keyboard\n"
+                            "        As you key in valid letters in morse code, the device will type the appropriate characters.\n\n"
+
+                            "..      Dots and Dashes\n"
+                            "        The device will type \".\" and \"-\" characters for each dit or dash you key.\n\n"
+
+                            "...     Space Bar\n"
+                            "        The device will act as a space bar.\n"
+                            "        (This is for developers who want raw keyup/keydown events.)\n";
 
 // false = up
 // true = down
@@ -68,7 +114,7 @@ int currentWPM;
 char *currentWPMString;
 
 Mode currentMode = KEYBOARD;
-Menu currentMenu = MAINMENU;
+Menu currentMenu = NONE;
 
 void setup() {
   Serial.begin(9600);
@@ -332,26 +378,45 @@ void loopSpaceBar(bool pressed) {
 ********************/
 
 void changeMenu(Menu menu) {
-  Keyboard.println("Changing menu to " + String(menu));
+  Keyboard.println("Changing menu to " + String(menu)); 
+  Menu previousMenu = currentMenu;
   currentMenu = menu;
-  switch(menu) {
-    case HELP:
+  
+  // TODO: Counts are slightly off, and this is way too slow.
+  /*
+   switch(previousMenu) {
+    case MAINMENU:
+      for (int i = 0; i < strlen(mainMenuText); i++) {
+        Keyboard.press(KEY_BACKSPACE);
+        Keyboard.release(KEY_BACKSPACE);
+      }
       break;
+    case HELP:
+      for (int i = 0; i < strlen(helpText); i++) {
+        Keyboard.press(KEY_BACKSPACE);
+        Keyboard.release(KEY_BACKSPACE);
+      }
+      break; 
     case WPM:
       break;
     case INPUT_MODE:
+      break; 
+  }
+  */
+  
+  switch(menu) {
+    case HELP:
+      Keyboard.println(helpText);
+      break;
+    case WPM:
+      Keyboard.println(wpmText);
+      break;
+    case INPUT_MODE:
+      Keyboard.println(inputModeText);
       break;
     case MAINMENU:
     default:
-      Keyboard.println("\nTELEGRAPH KEY SETTINGS\n\n"
-                      "Tap the correct sequence to choose a menu option.\n"
-                      "Hold down the key to quit.\n"
-                      "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
-                      ".       How To Use\n"
-                      "..      Change WPM / Input Speed\n"
-                      "...     Change Input Mode\n"
-                      "....     [Enable / Disable] Auto-Space\n"
-                      ".....    Switch to [Uppercase]\n");
+      Keyboard.println(mainMenuText);
       break;
   }
   resetMorse();
