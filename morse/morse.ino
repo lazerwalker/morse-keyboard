@@ -211,7 +211,6 @@ void loop() {
 
 void loopInput() {
   if (detectedLongPress) {
-    Keyboard.println("Entering menu");
     currentMode = MENU;
     didChangeMode = true;
     changeMenu(MAINMENU);
@@ -235,7 +234,7 @@ void loopMenu() {
   if (detectedLongPress) {
     if (currentMenu == MAINMENU) {
       didChangeMode = true;
-      Keyboard.println("Exiting main menu");
+      Keyboard.println("Exiting the menu!");
       // Exit the menu, restore saved mode
       char mode = EEPROM.read(MODE_ADDR);
       if (mode != 255) {
@@ -246,7 +245,6 @@ void loopMenu() {
       EEPROM.update(MODE_ADDR, currentMode);
     } else {
       // Go back to the menu
-      Keyboard.println("Returning to main menu");
       didChangeMode = true;
       changeMenu(MAINMENU);
     }
@@ -271,7 +269,6 @@ void loopMenu() {
 void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
   if (didChangeMode) {
     if(wasPressed && !pressed) {
-      Keyboard.println("Exit didChangeMode");
       didChangeMode = false;
       resetMorse();
       countedCurrentLongPress = false;
@@ -381,7 +378,6 @@ void loopSpaceBar(bool pressed) {
 ********************/
 
 void changeMenu(Menu menu) {
-  Keyboard.println("Changing menu to " + String(menu)); 
   Menu previousMenu = currentMenu;
   currentMenu = menu;
   
@@ -507,6 +503,7 @@ void resetWPM() {
   Keyboard.println("Resetting WPM to " + String(defaultWPM) + " WPM.");
   setWPM(defaultWPM);
 }
+
 
 
 
