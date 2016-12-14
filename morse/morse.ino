@@ -234,7 +234,9 @@ void loopMenu() {
   if (detectedLongPress) {
     if (currentMenu == MAINMENU) {
       didChangeMode = true;
-      Keyboard.println("Exiting the menu!");
+      Keyboard.println("Exiting the settings menu. Happy keying!");
+      Keyboard.println("\n--------------------------------------------------------------------------------\n");
+
       // Exit the menu, restore saved mode
       char mode = EEPROM.read(MODE_ADDR);
       if (mode != 255) {
@@ -380,28 +382,8 @@ void loopSpaceBar(bool pressed) {
 void changeMenu(Menu menu) {
   Menu previousMenu = currentMenu;
   currentMenu = menu;
-  
-  // TODO: Counts are slightly off, and this is way too slow.
-  /*
-   switch(previousMenu) {
-    case MAINMENU:
-      for (int i = 0; i < strlen(mainMenuText); i++) {
-        Keyboard.press(KEY_BACKSPACE);
-        Keyboard.release(KEY_BACKSPACE);
-      }
-      break;
-    case HELP:
-      for (int i = 0; i < strlen(helpText); i++) {
-        Keyboard.press(KEY_BACKSPACE);
-        Keyboard.release(KEY_BACKSPACE);
-      }
-      break; 
-    case WPM:
-      break;
-    case INPUT_MODE:
-      break; 
-  }
-  */
+
+  Keyboard.println("\n--------------------------------------------------------------------------------\n");
   
   switch(menu) {
     case HELP:
