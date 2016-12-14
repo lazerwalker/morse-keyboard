@@ -110,7 +110,7 @@ int timestampCount = 0;
 
 const int defaultWPM = 15;
 int currentWPM;
-char *currentWPMString;
+char currentWPMString[10];
 
 Mode currentMode = KEYBOARD;
 Menu currentMenu = NONE;
@@ -235,7 +235,7 @@ void loopMenu() {
     if (currentMenu == MAINMENU) {
       didChangeMode = true;
       Keyboard.println("Exiting the settings menu. Happy keying!");
-      Keyboard.println("\n--------------------------------------------------------------------------------\n");
+      Keyboard.println("--------------------------------------------------------------------------------");
 
       // Exit the menu, restore saved mode
       char mode = EEPROM.read(MODE_ADDR);
@@ -383,14 +383,14 @@ void changeMenu(Menu menu) {
   Menu previousMenu = currentMenu;
   currentMenu = menu;
 
-  Keyboard.println("\n--------------------------------------------------------------------------------\n");
+  Keyboard.println("--------------------------------------------------------------------------------");
   
   switch(menu) {
     case HELP:
       Keyboard.println(helpText);
       break;
     case WPM:
-      Keyboard.println(wpmText);
+      enterWPMMode();
       break;
     case INPUT_MODE:
       Keyboard.println(inputModeText);
@@ -463,22 +463,44 @@ void loopInputMode() {
 
 void loopWPM() {
   if (detectedChar) {
-    // TODO: Only do something if it's a number
-    currentWPMString += detectedChar;
-    Keyboard.write(detectedChar);
+    if (isdigit(lastChar)) {
+      Keyboard.write(lastChar);
+
+      int len = strlen(currentWPMString);
+      currentWPMString[len] = lastChar;
+      currentWPMString[len+ 1] = '\0';
+    } else if (strcmp(lastMorse, "........") == 0) {
+      Keyboard.press(KEY_BACKSPACE);
+      Keyboard.release(KEY_BACKSPACE);
+
+      int len = strlen(currentWPMString);
+      currentWPMString[len - 1] = '\0';
+    } else if (strcmp(lastMorse, "...-.-") == 0) {
+      Keyboard.println("\nSetting the speed to " + String(currentWPMString) + " WPM.");
+      
+      int newWPM = atoi(currentWPMString);
+      
+      setWPM(newWPM);
+      changeMenu(MAINMENU);
+    }
   }
-  // TODO: Check if we should exit  
 }
 
 void enterWPMMode() {
-  currentWPMString = "";
-  Keyboard.println("Welcome to WPM Mode! Current speed is "  + String(currentWPM) + " WPM. Enter a new number by entering the corresponding number in morse.");
+  currentWPMString[0] = '\0';
+  
+  Keyboard.println("\nCHANGE INPUT SPEED\n\n"
+                    "The current speed is "  + String(currentWPM) + " WPM\n"
+                    "Enter a new number by entering the corresponding number in morse\n"
+                    "To backspace, tap 8 dots (........)\n"
+                    "To accept the current WPM, tap \"...-.-\"\n"
+                    "To cancel, hold down the key\n\n");
+  Keyboard.write("New WPM: ");
 }
 
 void setWPM(int wpm) {
-  setSpeedFromWPM(defaultWPM);
-  EEPROM.update(WPM_ADDR, defaultWPM);
-  currentWPM = defaultWPM;  
+  EEPROM.update(WPM_ADDR, wpm);
+  currentWPM = wpm;  
 }
 
 void resetWPM() {
