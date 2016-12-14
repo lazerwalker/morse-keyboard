@@ -98,7 +98,6 @@ int currentMorseCount;
 
 char lastChar;
 char *lastMorse;
-int lastMorseCount;
 
 uint8_t MODE_ADDR = 0;
 uint8_t WPM_ADDR = 1;
@@ -197,7 +196,6 @@ void loop() {
   detectedLongPress = false;
   
   lastChar = false;
-  lastMorseCount = 0;
 
   parseMorse(isPressed, now, timeDiff);
 
@@ -276,8 +274,9 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
       didChangeMode = false;
       resetMorse();
       countedCurrentLongPress = false;
+      countedCurrentTap = false;
     }
-    return;      
+    return;
   }
   
   if (wasPressed) {   
@@ -344,13 +343,6 @@ void loopKeyboard() {
 
   if (detectedChar) {
     Keyboard.write(lastChar);
-    Serial.print("FINISHED CHAR ");
-    for (int i = 0; i < lastMorseCount; i++) {
-      Serial.print(lastMorse[i]);
-    }
-    Serial.print(": ");
-    Serial.print(lastChar);
-    Serial.print("\n");
   }
 }
 
