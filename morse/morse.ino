@@ -214,7 +214,7 @@ void loopMenu() {
   if (detectedLongPress) {
     if (currentMenu == MAINMENU) {
       didChangeMode = true;
-      Keyboard.println("Exiting the settings menu. Happy keying!");
+      Keyboard.println("\nExiting the settings menu. Happy keying!");
       Keyboard.println("\n--------------------------------------------------------------------------------");
 
       // Exit the menu, restore saved mode
