@@ -405,10 +405,12 @@ void changeMenu(Menu menu) {
       }
 
       if (useCapitalLetters) {
-        Keyboard.println(".....    Switch to Lowercase Letters\n");        
+        Keyboard.println(".....    Switch to Lowercase Letters");        
       } else {
-        Keyboard.println(".....    Switch to Uppercase Letters\n");
+        Keyboard.println(".....    Switch to Uppercase Letters");
       }
+
+      Keyboard.println("......    Reset Input Speed to Default\n");
 
       break;
   }
@@ -439,7 +441,10 @@ void changeMenu(Menu menu) {
        } else {
          Keyboard.println("Switching to print lowercase letters.");
        }
-     }  
+     } else if (strcmp(lastMorse, "......") == 0) {
+         Keyboard.println("Resetting input speed to " + String(defaultWPM) + " WPM.");
+         setWPM(defaultWPM);
+     }
    }
  }
 
