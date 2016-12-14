@@ -32,9 +32,9 @@ static char* mainMenuText = "\nTELEGRAPH KEY SETTINGS\n\n"
                       "Tap the correct sequence to choose a menu option.\n"
                       "Hold down the key to quit.\n"
                       "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
-                      ".       How To Use\n"
-                      "..      Change WPM / Input Speed\n"
-                      "...     Change Input Mode";
+                      ".        How To Use\n"
+                      "..       Change WPM / Input Speed\n"
+                      "...      Change Input Mode";
 
 static char *helpText = "\nHOW TO USE\n\n"
                         "This is a morse code keyboard. You use it to type morse code!\n"
@@ -410,7 +410,7 @@ void changeMenu(Menu menu) {
         Keyboard.println(".....    Switch to Uppercase Letters");
       }
 
-      Keyboard.println("......    Reset Input Speed to Default\n");
+      Keyboard.println("......   Reset Input Speed to Default\n");
 
       break;
   }
