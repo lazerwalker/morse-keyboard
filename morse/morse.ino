@@ -435,12 +435,25 @@ void changeMenu(Menu menu) {
      } else if (strcmp(lastMorse, ".....") == 0) {
        // Toggle lowercase/uppercase
      }  
-
    }
  }
 
 void loopInputMode() {
-
+   if (detectedChar) {
+     if (strcmp(lastMorse, ".") == 0) {
+       EEPROM.update(MODE_ADDR, KEYBOARD);
+       Keyboard.println("Setting key to Morse Keyboard mode.");
+       changeMenu(MAINMENU);
+     } else if (strcmp(lastMorse, "..") == 0) {
+       EEPROM.update(MODE_ADDR, DOTDASH);
+       Keyboard.println("Setting key to Dots and Dashes mode.");
+       changeMenu(MAINMENU);
+     } else if (strcmp(lastMorse, "...") == 0) {
+       EEPROM.update(MODE_ADDR, SPACEBAR);
+       Keyboard.println("Setting key to Space Bar mode.");
+       changeMenu(MAINMENU);
+     }
+   }
 }
 
 void loopWPM() {
