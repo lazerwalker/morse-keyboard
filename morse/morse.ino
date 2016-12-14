@@ -22,35 +22,16 @@ typedef enum {
 
 typedef enum {
   MAINMENU = 0,
-  HELP,
   WPM,
   INPUT_MODE,
   NONE
 } Menu;
 
 static char* mainMenuText = "\nTELEGRAPH KEY SETTINGS\n\n"
-                      "Tap the correct sequence to choose a menu option.\n"
-                      "Hold down the key to quit.\n"
-                      "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
-                      ".         How To Use\n"
-                      "..        Reset Input Speed to Default";                      
+                      "To choose a menu option, tap the corresponding morse sequence.\n"
+                      "Hold down the key to quit.\n\n"
+                      ".       Reset Input Speed to Default";                      
                       
-static char *helpText = "\nHOW TO USE\n\n"
-                        "This is a morse code keyboard. You use it to type morse code!\n"
-                        "There are three input modes:\n\n"
-                        "1. Morse Keyboard\n"
-                        "This is the default mode. As you key in valid morse code letters, the device will type the corresponding characters as if you'd typed them yourself on a normal keyboard.\n" 
-                        "For example, if you key in \"...\", then \"---\", then \"...\", your computer will act as if you just typed the letters \"SOS\".\n\n"
-
-                        "2. Dots and Dashes\n"
-                        "Every time you key in a short press (a \"dot\") or a long press (a \"dash\"), the device will type a \".\" or \"-\" character.\n" 
-                        "This is useful if you want to send messages in morse code to your friends!\n\n"
-
-                        "3. Space Bar\n"
-                        "In this mode, the telegraph key just acts like a space bar. You can think of it like a one-button keyboard.\n"
-                        "This mode is mostly useful if you're a developer who wants to build a custom experience using the hardware,\n"
-                        "as it's the only mode that triggers discrete keydown and keyup events.\n";
-  
 static char *wpmText = "\nCHANGE WPM\n\n"
                       "Your current input speed is 5 WPM.\n"
                       "To change the speed, enter a number or something.\n";
@@ -256,8 +237,6 @@ void loopMenu() {
     case MAINMENU:
       loopMainMenu();
       break;
-    case HELP:
-      break;
     case WPM:
       loopWPM();
       break;
@@ -397,9 +376,6 @@ void changeMenu(Menu menu) {
   Keyboard.println("\n--------------------------------------------------------------------------------");
   
   switch(menu) {
-    case HELP:
-      Keyboard.println(helpText);
-      break;
     case WPM:
       enterWPMMode();
       break;
@@ -409,19 +385,19 @@ void changeMenu(Menu menu) {
     case MAINMENU:
     default:
       Keyboard.println(mainMenuText);
-      Keyboard.println("...       Change WPM / Input Speed (Current Speed: " + String(currentWPM) + " WPM)");
-      Keyboard.println("....      Change Input Mode");
+      Keyboard.println("..      Change WPM / Input Speed (Current Speed: " + String(currentWPM) + " WPM)");
+      Keyboard.println("...     Change Input Mode");
 
       if (autoSpace) {
-        Keyboard.println(".....     Disable Auto-Space");        
+        Keyboard.println("....    Disable Auto-Space");        
       } else {
-        Keyboard.println(".....     Enable Auto-Space");
+        Keyboard.println("....    Enable Auto-Space");
       }
 
       if (useCapitalLetters) {
-        Keyboard.println("......    Switch to Lowercase Letters");        
+        Keyboard.println(".....   Switch to Lowercase Letters");        
       } else {
-        Keyboard.println("......    Switch to Uppercase Letters");
+        Keyboard.println(".....   Switch to Uppercase Letters");
       }
 
       break;
@@ -432,16 +408,14 @@ void changeMenu(Menu menu) {
  void loopMainMenu() {
    if (detectedChar) {
      if (strcmp(lastMorse, ".") == 0) {
-       changeMenu(HELP);
-      } else if (strcmp(lastMorse, "..") == 0) {
          Keyboard.println("Resetting input speed to " + String(defaultWPM) + " WPM.");
          setWPM(defaultWPM);
          changeMenu(MAINMENU);
-     } else if (strcmp(lastMorse, "...") == 0) {
+     } else if (strcmp(lastMorse, "..") == 0) {
        changeMenu(WPM);
-     } else if (strcmp(lastMorse, "....") == 0) {
+     } else if (strcmp(lastMorse, "...") == 0) {
        changeMenu(INPUT_MODE);
-     } else if (strcmp(lastMorse, ".....") == 0) {
+     } else if (strcmp(lastMorse, "....") == 0) {
        autoSpace = !autoSpace;
        EEPROM.update(AUTOSPACE_ADDR, autoSpace);
        if (autoSpace) {
@@ -450,7 +424,7 @@ void changeMenu(Menu menu) {
          Keyboard.println("Disabling auto-space.");
        }
        changeMenu(MAINMENU);
-     } else if (strcmp(lastMorse, "......") == 0) {
+     } else if (strcmp(lastMorse, ".....") == 0) {
        useCapitalLetters = !useCapitalLetters; 
        EEPROM.update(CAPITAL_ADDR, useCapitalLetters);
        if (useCapitalLetters) {
