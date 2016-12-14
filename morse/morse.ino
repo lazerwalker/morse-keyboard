@@ -235,7 +235,7 @@ void loopMenu() {
     if (currentMenu == MAINMENU) {
       didChangeMode = true;
       Keyboard.println("Exiting the settings menu. Happy keying!");
-      Keyboard.println("--------------------------------------------------------------------------------");
+      Keyboard.println("\n--------------------------------------------------------------------------------");
 
       // Exit the menu, restore saved mode
       char mode = EEPROM.read(MODE_ADDR);
@@ -383,7 +383,7 @@ void changeMenu(Menu menu) {
   Menu previousMenu = currentMenu;
   currentMenu = menu;
 
-  Keyboard.println("--------------------------------------------------------------------------------");
+  Keyboard.println("\n--------------------------------------------------------------------------------");
   
   switch(menu) {
     case HELP:
