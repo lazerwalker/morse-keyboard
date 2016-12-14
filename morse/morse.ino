@@ -433,6 +433,7 @@ void changeMenu(Menu menu) {
        } else {
          Keyboard.println("Disabling auto-space.");
        }
+       changeMenu(MAINMENU);
      } else if (strcmp(lastMorse, ".....") == 0) {
        useCapitalLetters = !useCapitalLetters; 
        EEPROM.update(CAPITAL_ADDR, useCapitalLetters);
@@ -441,9 +442,11 @@ void changeMenu(Menu menu) {
        } else {
          Keyboard.println("Switching to print lowercase letters.");
        }
+       changeMenu(MAINMENU);
      } else if (strcmp(lastMorse, "......") == 0) {
          Keyboard.println("Resetting input speed to " + String(defaultWPM) + " WPM.");
          setWPM(defaultWPM);
+         changeMenu(MAINMENU);
      }
    }
  }
