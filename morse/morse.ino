@@ -33,8 +33,9 @@ static char* mainMenuText = "\nTELEGRAPH KEY SETTINGS\n\n"
                       "Hold down the key to quit.\n"
                       "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
                       ".        How To Use\n"
-                      "..       Change WPM / Input Speed\n"
-                      "...      Change Input Mode";
+                      "..       Reset Input Speed to Default\n"                      
+                      "...       Change WPM / Input Speed\n"
+                      "....      Change Input Mode";
 
 static char *helpText = "\nHOW TO USE\n\n"
                         "This is a morse code keyboard. You use it to type morse code!\n"
@@ -399,18 +400,16 @@ void changeMenu(Menu menu) {
     default:
       Keyboard.println(mainMenuText);
       if (autoSpace) {
-        Keyboard.println("....     Disable Auto-Space");        
+        Keyboard.println(".....     Disable Auto-Space");        
       } else {
-        Keyboard.println("....     Enable Auto-Space");
+        Keyboard.println(".....     Enable Auto-Space");
       }
 
       if (useCapitalLetters) {
-        Keyboard.println(".....    Switch to Lowercase Letters");        
+        Keyboard.println("......    Switch to Lowercase Letters");        
       } else {
-        Keyboard.println(".....    Switch to Uppercase Letters");
+        Keyboard.println("......    Switch to Uppercase Letters");
       }
-
-      Keyboard.println("......   Reset Input Speed to Default\n");
 
       break;
   }
@@ -421,11 +420,15 @@ void changeMenu(Menu menu) {
    if (detectedChar) {
      if (strcmp(lastMorse, ".") == 0) {
        changeMenu(HELP);
-     } else if (strcmp(lastMorse, "..") == 0) {
-       changeMenu(WPM);
+      } else if (strcmp(lastMorse, "..") == 0) {
+         Keyboard.println("Resetting input speed to " + String(defaultWPM) + " WPM.");
+         setWPM(defaultWPM);
+         changeMenu(MAINMENU);
      } else if (strcmp(lastMorse, "...") == 0) {
-       changeMenu(INPUT_MODE);
+       changeMenu(WPM);
      } else if (strcmp(lastMorse, "....") == 0) {
+       changeMenu(INPUT_MODE);
+     } else if (strcmp(lastMorse, ".....") == 0) {
        autoSpace = !autoSpace;
        EEPROM.update(AUTOSPACE_ADDR, autoSpace);
        if (autoSpace) {
@@ -434,7 +437,7 @@ void changeMenu(Menu menu) {
          Keyboard.println("Disabling auto-space.");
        }
        changeMenu(MAINMENU);
-     } else if (strcmp(lastMorse, ".....") == 0) {
+     } else if (strcmp(lastMorse, "......") == 0) {
        useCapitalLetters = !useCapitalLetters; 
        EEPROM.update(CAPITAL_ADDR, useCapitalLetters);
        if (useCapitalLetters) {
@@ -443,10 +446,6 @@ void changeMenu(Menu menu) {
          Keyboard.println("Switching to print lowercase letters.");
        }
        changeMenu(MAINMENU);
-     } else if (strcmp(lastMorse, "......") == 0) {
-         Keyboard.println("Resetting input speed to " + String(defaultWPM) + " WPM.");
-         setWPM(defaultWPM);
-         changeMenu(MAINMENU);
      }
    }
  }
