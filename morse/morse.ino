@@ -34,9 +34,7 @@ static char* mainMenuText = "\nTELEGRAPH KEY SETTINGS\n\n"
                       "Confused? Just quickly tap the telegraph key once for instructions.\n\n"
                       ".       How To Use\n"
                       "..      Change WPM / Input Speed\n"
-                      "...     Change Input Mode\n"
-                      "....     [Enable / Disable] Auto-Space\n"
-                      ".....    Switch to [Uppercase]\n";
+                      "...     Change Input Mode";
 
 static char *helpText = "\nHOW TO USE\n\n"
                         "This is a morse code keyboard. You use it to type morse code!\n"
@@ -104,6 +102,8 @@ int lastMorseCount;
 
 uint8_t MODE_ADDR = 0;
 uint8_t WPM_ADDR = 1;
+uint8_t AUTOSPACE_ADDR = 2; // These 2 are inefficient, but we can spare the extra byte or so
+uint8_t CAPITAL_ADDR = 3;
 
 // WPM detector
 unsigned long timestamps[8];
@@ -115,6 +115,9 @@ char *currentWPMString;
 
 Mode currentMode = KEYBOARD;
 Menu currentMenu = NONE;
+
+bool autoSpace = false;
+bool useCapitalLetters = false;
 
 void setup() {
   Serial.begin(9600);
@@ -135,6 +138,9 @@ void setup() {
     currentWPM = defaultWPM;
   }
   setSpeedFromWPM(currentWPM);
+
+  autoSpace = EEPROM.read(AUTOSPACE_ADDR);
+  useCapitalLetters = EEPROM.read(CAPITAL_ADDR);
   
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
@@ -158,7 +164,11 @@ void addMorse(char m) {
 char morseToAscii(char *input) {
   for (int i = 0; i < MORSE_CHAR_COUNT; i++) {
     if (strcmp(input, morseMapping[i]) == 0) {
-      return ascii[i];
+      if (useCapitalLetters) {
+        return uppercaseAscii[i];
+      } else {
+        return lowercaseAscii[i];
+      }
     }
   }
   
@@ -298,7 +308,7 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
       countedCurrentSpace = false;
       detectedDown = true;
     } else {
-      if (timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
+      if (autoSpace && timeDiff >= CHAR_DELAY + WORD_DELAY && !countedCurrentSpace) {
         detectedSpace = true;
         countedCurrentSpace = true;
       } else if (timeDiff >= CHAR_DELAY && !countedCurrentChar) {
@@ -417,6 +427,18 @@ void changeMenu(Menu menu) {
     case MAINMENU:
     default:
       Keyboard.println(mainMenuText);
+      if (autoSpace) {
+        Keyboard.println("....     Disable Auto-Space");        
+      } else {
+        Keyboard.println("....     Enable Auto-Space");
+      }
+
+      if (useCapitalLetters) {
+        Keyboard.println(".....    Switch to Lowercase Letters\n");        
+      } else {
+        Keyboard.println(".....    Switch to Uppercase Letters\n");
+      }
+
       break;
   }
   resetMorse();
@@ -431,9 +453,21 @@ void changeMenu(Menu menu) {
      } else if (strcmp(lastMorse, "...") == 0) {
        changeMenu(INPUT_MODE);
      } else if (strcmp(lastMorse, "....") == 0) {
-       // Enable/disable autospace    
+       autoSpace = !autoSpace;
+       EEPROM.update(AUTOSPACE_ADDR, autoSpace);
+       if (autoSpace) {
+         Keyboard.println("Enabling auto-space.");
+       } else {
+         Keyboard.println("Disabling auto-space.");
+       }
      } else if (strcmp(lastMorse, ".....") == 0) {
-       // Toggle lowercase/uppercase
+       useCapitalLetters = !useCapitalLetters; 
+       EEPROM.update(CAPITAL_ADDR, useCapitalLetters);
+       if (useCapitalLetters) {
+         Keyboard.println("Switching to print uppercase letters.");
+       } else {
+         Keyboard.println("Switching to print lowercase letters.");
+       }
      }  
    }
  }
