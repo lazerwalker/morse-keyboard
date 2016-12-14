@@ -90,7 +90,7 @@ bool detectedDash = false;
 bool detectedChar = false;
 bool detectedSpace = false;
 bool detectedLongPress = false;
-bool detectedSpecialCode = false;
+bool detectedBackspace = false;
 
 char *currentMorse;
 int currentMorseCount;
@@ -168,8 +168,7 @@ char morseToAscii(char *input) {
         return lowercaseAscii[i];
       }
     }
-  }
-  
+  }  
   return NULL;
 }
 
@@ -193,6 +192,7 @@ void loop() {
   detectedChar = false;
   detectedSpace = false;
   detectedLongPress = false;
+  detectedBackspace = false;
   
   lastChar = false;
 
@@ -323,6 +323,10 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
           countedCurrentSpace = true;
         }
 
+        if (strcmp(lastMorse, "........") == 0) {
+          detectedBackspace = true;  
+        }
+
         countedCurrentChar = true;
         resetMorse();
       }
@@ -335,6 +339,14 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
 ********************/
 
 void loopKeyboard() {
+  if (detectedBackspace) {
+    Keyboard.press(KEY_BACKSPACE);
+    Keyboard.release(KEY_BACKSPACE);
+    return; 
+    // Short-circuit early since detectedChar = true
+    // This can't change, because only keyboard mode cares about backspace
+  }  
+  
   if (detectedSpace) {
     Keyboard.print(' ');
     Serial.println("SPACE");
@@ -359,7 +371,7 @@ void loopDotDash() {
   if (detectedSpace) {
     Serial.println("SPACE");
     Keyboard.write(" ");
-  }  
+  }
 }
 
 void loopSpaceBar(bool pressed) {
