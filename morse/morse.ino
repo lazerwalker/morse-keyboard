@@ -508,6 +508,7 @@ void enterWPMMode() {
 
 void setWPM(int wpm) {
   EEPROM.update(WPM_ADDR, wpm);
+  setSpeedFromWPM(wpm);
   currentWPM = wpm;  
 }
 
