@@ -72,6 +72,7 @@ bool detectedChar = false;
 bool detectedSpace = false;
 bool detectedLongPress = false;
 bool detectedBackspace = false;
+bool detectedEnter = false;
 
 char *currentMorse;
 int currentMorseCount;
@@ -174,6 +175,7 @@ void loop() {
   detectedSpace = false;
   detectedLongPress = false;
   detectedBackspace = false;
+  detectedEnter = false;
   
   lastChar = false;
 
@@ -306,6 +308,10 @@ void parseMorse(bool pressed, unsigned long now, unsigned long timeDiff) {
           detectedBackspace = true;  
         }
 
+        if (strcmp(lastMorse, "...-.-") == 0) {
+          detectedEnter = true;  
+        }        
+
         countedCurrentChar = true;
         resetMorse();
       }
@@ -325,6 +331,11 @@ void loopKeyboard() {
     // Short-circuit early since detectedChar = true
     // This can't change, because only keyboard mode cares about backspace
   }  
+
+  if (detectedEnter) {
+    Keyboard.press(KEY_RETURN);
+    Keyboard.release(KEY_RETURN);
+  }
   
   if (detectedSpace) {
     Keyboard.print(' ');
