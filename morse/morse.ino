@@ -513,18 +513,3 @@ void resetWPM() {
   Keyboard.println("Resetting WPM to " + String(defaultWPM) + " WPM.");
   setWPM(defaultWPM);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
