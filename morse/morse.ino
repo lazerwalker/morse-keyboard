@@ -7,7 +7,7 @@ int CHAR_DELAY = 250;
 int WORD_DELAY = 300;
 int LONG_PRESS = 300;
 
-int BUTTON = 7;
+int BUTTON = 5;
 int LED = 13;
 
 unsigned long start = millis();
