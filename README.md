@@ -16,6 +16,13 @@ Clone this repo. Open `morse.ino` in the Arduino IDE. My production hardware use
 If you're trying to use this with a non-Teensy microcontroller, there may be slight modifications needed to enable keyboard HID support.
 
 
+## Hard Reset
+
+If you find your telegraph key is in a weird set, there's a `reset` sketch that takes all persistent EEPROM state and resets it to the default state. This EEPROM state will normally persist beyond a power cycle or even a reflash of the sketch, so this sketch will be necessary. 
+
+After running `reset.ino`, you'll need to reflash the normal `morse.ino` sketch.
+
+
 ## License
 This source code is available under the MIT license. See the `LICENSE` file for more information.
 
