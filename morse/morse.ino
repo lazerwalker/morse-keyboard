@@ -114,7 +114,9 @@ void setup() {
   }
 
   currentWPM = EEPROM.read(WPM_ADDR);
-  if (currentWPM == 255) { // Never manually set, use the default
+  // 255 = never set
+  // 0 = should never happen, but very bad things will happen if it does
+  if (currentWPM == 255 || currentWPM == 0) {
     currentWPM = defaultWPM;
   }
   setSpeedFromWPM(currentWPM);
@@ -481,11 +483,15 @@ void loopWPM() {
       int len = strlen(currentWPMString);
       currentWPMString[len - 1] = '\0';
     } else if (strcmp(lastMorse, "...-.-") == 0) {
-      Keyboard.println("\nSetting the speed to " + String(currentWPMString) + " WPM.");
-      
       int newWPM = atoi(currentWPMString);
+
+      if(newWPM == 0) {
+        Keyboard.println("You can't set the WPM to 0! Exiting without saving changes.");
+      } else {
+        Keyboard.println("\nSetting the speed to " + String(currentWPMString) + " WPM.");
+        setWPM(newWPM);
+      }
       
-      setWPM(newWPM);
       changeMenu(MAINMENU);
     }
   }
